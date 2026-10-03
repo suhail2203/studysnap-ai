@@ -34,7 +34,7 @@ MODEL_NAME = "gemini-3.6-flash"
 def get_gemini_client():
     return genai.Client(api_key=GEMINI_API_KEY)
 
-def send_study_summary(summary):
+def send_study_summary(summary,recipient_email):
     sender_email = st.secrets["GMAIL_ADDRESS"]
     app_password = st.secrets["GMAIL_APP_PASSWORD"].replace(" ", "")
 
@@ -42,7 +42,7 @@ def send_study_summary(summary):
 
     message["Subject"] = "📚 Your StudySnap AI Study Summary"
     message["From"] = sender_email
-    message["To"] = sender_email
+    message["To"] = recipient_email
 
     message.set_content(
         f"""StudySnap AI - Study Summary
@@ -126,28 +126,35 @@ if st.sidebar.button("🆕 New Study Session"):
 
 st.sidebar.divider()
 
-st.sidebar.subheader("📧 Study Summary")
+st.sidebar.subheader("📖 Study Summary")
 
-if st.sidebar.button("Send Summary to Gmail"):
-    with st.spinner("Creating your study summary..."):
+recipient_email = st.sidebar.text_input(
+    "📧 Enter your Gmail address",
+    placeholder="example@gmail.com"
+)
 
-        try:
-            summary_response = st.session_state.chat.send_message(
-                SUMMARY_REQUEST_PROMPT
-            )
+if st.sidebar.button("📧 Send Summary to Gmail"):
+    if not recipient_email:
+        st.sidebar.warning("Please enter your Gmail address.")
+    else:
+        with st.spinner("Creating your study summary..."):
+            try:
+                summary_response = st.session_state.chat.send_message(
+                    SUMMARY_REQUEST_PROMPT
+                )
 
-            summary = summary_response.text
+                summary = summary_response.text
 
-            send_study_summary(summary)
+                send_study_summary(summary,recipient_email)
 
-            st.sidebar.success(
-                "✅ Study summary sent to your Gmail!"
-            )
+                st.sidebar.success(
+                    "✅ Study summary sent to your Gmail!"
+                )
 
-        except Exception as error:
-            st.sidebar.error(
-                f"Unable to send email: {error}"
-            )
+            except Exception as error:
+                st.sidebar.error(
+                    f"Unable to send email: {error}"
+                )
 
 # -----------------------------
 # Welcome message
